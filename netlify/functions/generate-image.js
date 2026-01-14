@@ -1,6 +1,5 @@
 const fetch = require('node-fetch');
 
-// HARDCODE YOUR API KEY HERE
 const API_KEY = process.env.GEMINI_API_KEY;
 
 exports.handler = async (event, context) => {

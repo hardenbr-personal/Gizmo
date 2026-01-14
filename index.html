@@ -1,0 +1,1463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Gizmo Color">
+    <meta name="theme-color" content="#667eea">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <title>Gizmo's Coloring Book</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Generation Mode Styles */
+        .generation-mode {
+            padding: 20px;
+            min-height: 100vh;
+            background: #1a1a2e;
+        }
+
+        .generation-mode .app-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: #252542;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            color: #a78bfa;
+            margin-bottom: 10px;
+        }
+
+        .header .subtitle {
+            color: #9ca3af;
+            font-size: 1.1em;
+        }
+
+        .cat-emoji {
+            font-size: 3em;
+            margin-bottom: 10px;
+        }
+
+        .gizmo-icon {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid #a78bfa;
+            box-shadow: 0 4px 15px rgba(167, 139, 250, 0.4);
+            margin-bottom: 10px;
+        }
+
+        .section {
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            font-size: 1.3em;
+            color: #e5e7eb;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .input-field {
+            flex: 1;
+            min-width: 250px;
+            padding: 15px;
+            font-size: 1em;
+            border: 2px solid #3a3a5c;
+            border-radius: 10px;
+            transition: border-color 0.3s;
+            background: #1a1a2e;
+            color: #e5e7eb;
+        }
+
+        .input-field::placeholder {
+            color: #6b7280;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            font-size: 1em;
+            font-weight: 600;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: #3a3a5c;
+            color: #e5e7eb;
+        }
+
+        .btn-secondary:hover {
+            background: #4a4a6c;
+        }
+
+        .btn-icon {
+            width: 48px;
+            height: 48px;
+            padding: 0;
+            font-size: 1.3em;
+        }
+
+        .btn-active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #a78bfa;
+            font-size: 1.2em;
+        }
+
+        .spinner {
+            border: 4px solid #3a3a5c;
+            border-top: 4px solid #a78bfa;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .example-prompts {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 15px 0;
+        }
+
+        .example-btn {
+            padding: 8px 15px;
+            background: #3a3a5c;
+            border: 2px solid #4a4a6c;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.2s;
+            color: #d1d5db;
+        }
+
+        .example-btn:hover {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .api-setup {
+            background: #1e3a5f;
+            border: 2px solid #3b82f6;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        .api-setup h3 {
+            color: #93c5fd;
+            margin-bottom: 10px;
+        }
+
+        .api-setup p {
+            margin: 10px 0;
+            line-height: 1.6;
+            color: #d1d5db;
+        }
+
+        .api-setup a {
+            color: #93c5fd;
+        }
+
+        .api-setup ol {
+            margin-left: 20px;
+            line-height: 1.8;
+            color: #d1d5db;
+        }
+
+        /* Coloring Mode - Full Screen Layout */
+        .coloring-mode {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            flex-direction: column;
+            background: #1a1a2e;
+        }
+
+        /* Top bar in coloring mode */
+        .coloring-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 15px;
+            background: #252542;
+            border-bottom: 1px solid #3a3a5c;
+        }
+
+        .coloring-header h2 {
+            font-size: 1.1em;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .coloring-header .btn {
+            padding: 8px 15px;
+            font-size: 0.9em;
+        }
+
+        /* Canvas Area */
+        .canvas-area {
+            flex: 1;
+            overflow: auto;
+            padding: 10px;
+            background: #2a2a4a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .canvas-area.zoomed {
+            align-items: flex-start;
+            justify-content: flex-start;
+        }
+
+        .canvas-wrapper {
+            position: relative;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+        }
+
+        .canvas-wrapper canvas {
+            max-width: none;
+            max-height: none;
+        }
+
+        canvas {
+            display: block;
+            touch-action: none;
+        }
+
+        /* Bottom Panel */
+        .bottom-panel {
+            background: #252542;
+            border-top: 1px solid #3a3a5c;
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+
+        /* Color Row */
+        .color-row-container {
+            padding: 12px 15px;
+            border-bottom: 1px solid #3a3a5c;
+        }
+
+        .color-row-scroll {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            padding-bottom: 5px;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+
+        .color-row-scroll::-webkit-scrollbar {
+            display: none;
+        }
+
+        .color-section {
+            display: flex;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .color-divider {
+            width: 2px;
+            background: #3a3a5c;
+            margin: 0 5px;
+            flex-shrink: 0;
+        }
+
+        .color-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s;
+            border: 3px solid transparent;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .color-btn:active {
+            transform: scale(0.95);
+        }
+
+        .color-btn.active {
+            border-color: white;
+            transform: scale(1.1);
+            box-shadow: 0 0 15px rgba(255,255,255,0.4);
+        }
+
+        .color-btn.active::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.7);
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .color-btn.light.active::after {
+            color: #333;
+            text-shadow: none;
+        }
+
+        .color-picker-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            cursor: pointer;
+            border: 3px dashed #666;
+            background: conic-gradient(red, yellow, lime, aqua, blue, magenta, red);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+            position: relative;
+        }
+
+        .color-picker-btn span {
+            background: rgba(0,0,0,0.5);
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .color-picker-input {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        /* Toolbar Row */
+        .toolbar-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 15px;
+            gap: 10px;
+        }
+
+        .toolbar-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .current-color-display {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .current-color-swatch {
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            border: 3px solid white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+
+        .toolbar-row .btn {
+            background: #3a3a5c;
+            color: white;
+            border: none;
+        }
+
+        .toolbar-row .btn:hover {
+            background: #4a4a6c;
+        }
+
+        .toolbar-row .btn-active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .toolbar-row .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .toolbar-row .btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        /* Notifications */
+        .notification {
+            position: fixed;
+            top: 70px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 12px 24px;
+            border-radius: 10px;
+            z-index: 1000;
+            animation: slideDown 0.3s ease;
+            font-weight: 500;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateX(-50%) translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+
+        .notification.error {
+            background: #ff4757;
+            color: white;
+        }
+
+        .notification.success {
+            background: #2ed573;
+            color: white;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            animation: fadeIn 0.2s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .modal h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .modal p {
+            margin-bottom: 20px;
+            color: #666;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .generation-mode {
+                padding: 10px;
+            }
+
+            .generation-mode .app-container {
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .input-group {
+                flex-direction: column;
+            }
+
+            .input-group .btn {
+                width: 100%;
+            }
+        }
+
+        /* Recent colors label */
+        .recent-label {
+            color: #888;
+            font-size: 0.7em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 0 5px;
+            display: flex;
+            align-items: center;
+            flex-shrink: 0;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useRef, useEffect, useCallback } = React;
+
+        // Organized color palette
+        const COLOR_GROUPS = {
+            skin: ['#FFDFC4', '#F0C8A0', '#DEB887', '#D2956C', '#A0522D', '#8B4513'],
+            warm: ['#FF6B6B', '#FF8E8E', '#FFA07A', '#FFB347', '#FFD93D', '#FFEC8B', '#FF69B4', '#FF1493'],
+            cool: ['#87CEEB', '#45B7D1', '#4ECDC4', '#98D8C8', '#90EE90', '#6BCF7F', '#32CD32', '#228B22'],
+            purple: ['#E6E6FA', '#DDA0DD', '#B4A7D6', '#9370DB', '#8A2BE2', '#663399'],
+            neutral: ['#FFFFFF', '#F5F5F5', '#D3D3D3', '#A9A9A9', '#696969', '#333333', '#000000']
+        };
+
+        function ColoringBookApp() {
+            const [prompt, setPrompt] = useState('');
+            const [loading, setLoading] = useState(false);
+            const [notification, setNotification] = useState({ message: '', type: '', visible: false });
+            const [imageGenerated, setImageGenerated] = useState(false);
+            const [currentColor, setCurrentColor] = useState('#FF6B6B');
+            const [toolMode, setToolMode] = useState('fill');
+            const [recentColors, setRecentColors] = useState([]);
+            const [zoomLevel, setZoomLevel] = useState(1); // 1, 1.5, 2, 3
+            const zoomLevels = [1, 1.5, 2, 3];
+            const [showClearModal, setShowClearModal] = useState(false);
+            const [showNewImageModal, setShowNewImageModal] = useState(false);
+            
+            const [undoStack, setUndoStack] = useState([]);
+            const [redoStack, setRedoStack] = useState([]);
+            const MAX_UNDO_STEPS = 20;
+            const [showResumeModal, setShowResumeModal] = useState(false);
+            
+            const canvasRef = useRef(null);
+            const drawingCanvasRef = useRef(null);
+            const canvasAreaRef = useRef(null);
+            const touchStartRef = useRef({ time: 0, x: 0, y: 0, scrollX: 0, scrollY: 0 });
+            const isScrollingRef = useRef(false);
+            const [canvasSize, setCanvasSize] = useState({ width: 1024, height: 1024 });
+
+            // Check for saved work on mount
+            useEffect(() => {
+                const savedWork = localStorage.getItem('gizmo_saved_work');
+                if (savedWork) {
+                    setShowResumeModal(true);
+                }
+                // Restore recent colors
+                const savedColors = localStorage.getItem('gizmo_recent_colors');
+                if (savedColors) {
+                    try {
+                        setRecentColors(JSON.parse(savedColors));
+                    } catch (e) {}
+                }
+            }, []);
+
+            // Save recent colors when they change
+            useEffect(() => {
+                if (recentColors.length > 0) {
+                    localStorage.setItem('gizmo_recent_colors', JSON.stringify(recentColors));
+                }
+            }, [recentColors]);
+
+            const saveWork = useCallback(() => {
+                const baseCanvas = canvasRef.current;
+                const drawCanvas = drawingCanvasRef.current;
+                if (!baseCanvas || !drawCanvas) return;
+                
+                const savedData = {
+                    baseImage: baseCanvas.toDataURL('image/png'),
+                    drawingImage: drawCanvas.toDataURL('image/png'),
+                    canvasWidth: baseCanvas.width,
+                    canvasHeight: baseCanvas.height,
+                    timestamp: Date.now()
+                };
+                
+                try {
+                    localStorage.setItem('gizmo_saved_work', JSON.stringify(savedData));
+                } catch (e) {
+                    console.warn('Could not save work:', e);
+                }
+            }, []);
+
+            const loadSavedWork = useCallback(() => {
+                const savedWork = localStorage.getItem('gizmo_saved_work');
+                if (!savedWork) return;
+                
+                try {
+                    const data = JSON.parse(savedWork);
+                    setImageGenerated(true);
+                    setCanvasSize({ width: data.canvasWidth, height: data.canvasHeight });
+                    
+                    setTimeout(() => {
+                        const baseCanvas = canvasRef.current;
+                        const drawCanvas = drawingCanvasRef.current;
+                        if (!baseCanvas || !drawCanvas) return;
+                        
+                        baseCanvas.width = data.canvasWidth;
+                        baseCanvas.height = data.canvasHeight;
+                        drawCanvas.width = data.canvasWidth;
+                        drawCanvas.height = data.canvasHeight;
+                        
+                        const baseImg = new Image();
+                        baseImg.onload = () => {
+                            const ctx = baseCanvas.getContext('2d');
+                            ctx.drawImage(baseImg, 0, 0);
+                            
+                            const drawImg = new Image();
+                            drawImg.onload = () => {
+                                const drawCtx = drawCanvas.getContext('2d');
+                                drawCtx.drawImage(drawImg, 0, 0);
+                                showNotification('Welcome back! Your work has been restored. 🎨', 'success');
+                            };
+                            drawImg.src = data.drawingImage;
+                        };
+                        baseImg.src = data.baseImage;
+                    }, 100);
+                } catch (e) {
+                    console.error('Could not load saved work:', e);
+                    localStorage.removeItem('gizmo_saved_work');
+                }
+                
+                setShowResumeModal(false);
+            }, []);
+
+            const clearSavedWork = () => {
+                localStorage.removeItem('gizmo_saved_work');
+                setShowResumeModal(false);
+            };
+
+            const examplePrompts = [
+                "a fluffy cat with flowers and decorative patterns",
+                "a friendly dog in a garden with paisley designs",
+                "a butterfly with geometric patterns on a flower",
+                "an elephant with decorative patterns and mandalas",
+                "friendly fish swimming with coral and wave patterns"
+            ];
+
+            useEffect(() => {
+                if (notification.visible) {
+                    const timer = setTimeout(() => {
+                        setNotification(prev => ({ ...prev, visible: false }));
+                    }, 3000);
+                    return () => clearTimeout(timer);
+                }
+            }, [notification.visible]);
+
+            const showNotification = (message, type) => {
+                setNotification({ message, type, visible: true });
+            };
+
+            const addToRecentColors = (color) => {
+                setRecentColors(prev => {
+                    const filtered = prev.filter(c => c !== color);
+                    return [color, ...filtered].slice(0, 6);
+                });
+            };
+
+            const saveUndoState = useCallback(() => {
+                const canvas = drawingCanvasRef.current;
+                if (!canvas) return;
+                
+                const ctx = canvas.getContext('2d');
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                
+                setUndoStack(prev => {
+                    const newStack = [...prev, imageData];
+                    if (newStack.length > MAX_UNDO_STEPS) {
+                        newStack.shift();
+                    }
+                    return newStack;
+                });
+                setRedoStack([]);
+            }, []);
+
+            const undo = useCallback(() => {
+                if (undoStack.length === 0) return;
+                
+                const canvas = drawingCanvasRef.current;
+                if (!canvas) return;
+                
+                const ctx = canvas.getContext('2d');
+                const currentState = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                setRedoStack(prev => [...prev, currentState]);
+                
+                const previousState = undoStack[undoStack.length - 1];
+                ctx.putImageData(previousState, 0, 0);
+                
+                setUndoStack(prev => prev.slice(0, -1));
+                saveWork(); // Save after undo
+            }, [undoStack, saveWork]);
+
+            const redo = useCallback(() => {
+                if (redoStack.length === 0) return;
+                
+                const canvas = drawingCanvasRef.current;
+                if (!canvas) return;
+                
+                const ctx = canvas.getContext('2d');
+                const currentState = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                setUndoStack(prev => [...prev, currentState]);
+                
+                const redoState = redoStack[redoStack.length - 1];
+                ctx.putImageData(redoState, 0, 0);
+                
+                setRedoStack(prev => prev.slice(0, -1));
+                saveWork(); // Save after redo
+            }, [redoStack, saveWork]);
+
+            useEffect(() => {
+                const handleKeyDown = (e) => {
+                    if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+                        e.preventDefault();
+                        if (e.shiftKey) {
+                            redo();
+                        } else {
+                            undo();
+                        }
+                    }
+                };
+                
+                window.addEventListener('keydown', handleKeyDown);
+                return () => window.removeEventListener('keydown', handleKeyDown);
+            }, [undo, redo]);
+
+            const generateColoringPage = async () => {
+                if (!prompt.trim()) {
+                    showNotification('Please enter a description for your coloring page!', 'error');
+                    return;
+                }
+
+                setLoading(true);
+
+                try {
+                    const functionUrl = window.location.hostname === 'localhost' 
+                        ? 'http://localhost:8888/.netlify/functions/generate-image'
+                        : '/.netlify/functions/generate-image';
+
+                    const response = await fetch(functionUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ prompt })
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.error || 'Failed to generate image.');
+                    }
+
+                    const data = await response.json();
+                    
+                    if (data.generated_images && data.generated_images.length > 0) {
+                        const imageData = data.generated_images[0].image.image_bytes;
+                        const imageUrl = `data:image/png;base64,${imageData}`;
+                        
+                        setImageGenerated(true);
+                        
+                        setTimeout(() => {
+                            const img = new Image();
+                            img.onload = () => {
+                                const canvas = canvasRef.current;
+                                if (!canvas) return;
+                                const ctx = canvas.getContext('2d');
+                                
+                                canvas.width = img.width;
+                                canvas.height = img.height;
+                                setCanvasSize({ width: img.width, height: img.height });
+                                
+                                ctx.fillStyle = 'white';
+                                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                                ctx.drawImage(img, 0, 0);
+                                
+                                const drawCanvas = drawingCanvasRef.current;
+                                if (drawCanvas) {
+                                    drawCanvas.width = canvas.width;
+                                    drawCanvas.height = canvas.height;
+                                }
+                                
+                                setUndoStack([]);
+                                setRedoStack([]);
+                                
+                                // Save initial state (blank drawing on new image)
+                                setTimeout(() => saveWork(), 200);
+                                
+                                showNotification('Coloring page ready! Tap to fill areas. ✨', 'success');
+                            };
+                            img.onerror = () => showNotification('Failed to load image', 'error');
+                            img.src = imageUrl;
+                        }, 100);
+                    } else {
+                        throw new Error('No image generated. Try a different prompt!');
+                    }
+                } catch (err) {
+                    showNotification(`Error: ${err.message}`, 'error');
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            // Touch handling for hold-to-scroll
+            const HOLD_THRESHOLD = 250; // ms - hold longer than this to scroll
+            
+            const handleTouchStart = (e) => {
+                const touch = e.touches[0];
+                const canvasArea = canvasAreaRef.current;
+                touchStartRef.current = {
+                    time: Date.now(),
+                    x: touch.clientX,
+                    y: touch.clientY,
+                    scrollX: canvasArea ? canvasArea.scrollLeft : 0,
+                    scrollY: canvasArea ? canvasArea.scrollTop : 0
+                };
+                isScrollingRef.current = false;
+            };
+            
+            const handleTouchMove = (e) => {
+                const touch = e.touches[0];
+                const elapsed = Date.now() - touchStartRef.current.time;
+                
+                // If held long enough, enable scrolling
+                if (elapsed > HOLD_THRESHOLD) {
+                    e.preventDefault();
+                    isScrollingRef.current = true;
+                    
+                    const canvasArea = canvasAreaRef.current;
+                    if (canvasArea) {
+                        const deltaX = touchStartRef.current.x - touch.clientX;
+                        const deltaY = touchStartRef.current.y - touch.clientY;
+                        canvasArea.scrollLeft = touchStartRef.current.scrollX + deltaX;
+                        canvasArea.scrollTop = touchStartRef.current.scrollY + deltaY;
+                    }
+                }
+            };
+            
+            const handleTouchEnd = (e) => {
+                const elapsed = Date.now() - touchStartRef.current.time;
+                
+                // Quick tap = fill or eyedropper
+                if (!isScrollingRef.current && elapsed < HOLD_THRESHOLD) {
+                    e.preventDefault();
+                    if (toolMode === 'fill') {
+                        handleFill(e);
+                    } else if (toolMode === 'eyedropper') {
+                        handleEyedropper(e);
+                    }
+                }
+                isScrollingRef.current = false;
+            };
+            
+            const handleCanvasClick = (e) => {
+                // Mouse clicks work normally
+                if (e.type === 'mousedown') {
+                    e.preventDefault();
+                    if (toolMode === 'fill') {
+                        handleFill(e);
+                    } else if (toolMode === 'eyedropper') {
+                        handleEyedropper(e);
+                    }
+                }
+            };
+
+            const getCanvasCoordinates = (e) => {
+                const canvas = drawingCanvasRef.current;
+                const rect = canvas.getBoundingClientRect();
+                let clientX, clientY;
+                
+                if (e.type.includes('touch')) {
+                    const touch = e.touches[0] || e.changedTouches[0];
+                    clientX = touch.clientX;
+                    clientY = touch.clientY;
+                } else {
+                    clientX = e.clientX;
+                    clientY = e.clientY;
+                }
+                
+                return {
+                    x: Math.floor((clientX - rect.left) * (canvas.width / rect.width)),
+                    y: Math.floor((clientY - rect.top) * (canvas.height / rect.height))
+                };
+            };
+
+            const handleFill = (e) => {
+                const canvas = drawingCanvasRef.current;
+                const baseCanvas = canvasRef.current;
+                if (!canvas || !baseCanvas) return;
+                
+                const { x, y } = getCanvasCoordinates(e);
+                saveUndoState();
+                floodFill(canvas, baseCanvas, x, y, currentColor);
+                addToRecentColors(currentColor);
+                saveWork(); // Auto-save after each fill
+            };
+
+            const handleEyedropper = (e) => {
+                const canvas = drawingCanvasRef.current;
+                const baseCanvas = canvasRef.current;
+                if (!canvas || !baseCanvas) return;
+                
+                const { x, y } = getCanvasCoordinates(e);
+                const drawCtx = canvas.getContext('2d');
+                const baseCtx = baseCanvas.getContext('2d');
+                
+                let pixel = drawCtx.getImageData(x, y, 1, 1).data;
+                if (pixel[3] === 0) {
+                    pixel = baseCtx.getImageData(x, y, 1, 1).data;
+                }
+                
+                const hex = rgbToHex(pixel[0], pixel[1], pixel[2]);
+                setCurrentColor(hex);
+                setToolMode('fill');
+                showNotification(`Color picked: ${hex}`, 'success');
+            };
+
+            const rgbToHex = (r, g, b) => {
+                return '#' + [r, g, b].map(x => {
+                    const hex = x.toString(16);
+                    return hex.length === 1 ? '0' + hex : hex;
+                }).join('').toUpperCase();
+            };
+
+            const floodFill = (drawCanvas, baseCanvas, startX, startY, fillColor) => {
+                const ctx = drawCanvas.getContext('2d');
+                const baseCtx = baseCanvas.getContext('2d');
+                
+                const drawImageData = ctx.getImageData(0, 0, drawCanvas.width, drawCanvas.height);
+                const baseImageData = baseCtx.getImageData(0, 0, baseCanvas.width, baseCanvas.height);
+                const pixels = drawImageData.data;
+                const basePixels = baseImageData.data;
+                
+                const width = drawCanvas.width;
+                const height = drawCanvas.height;
+                
+                const fillRGB = hexToRgb(fillColor);
+                
+                const startPos = (startY * width + startX) * 4;
+                const startR = pixels[startPos];
+                const startG = pixels[startPos + 1];
+                const startB = pixels[startPos + 2];
+                
+                const baseR = basePixels[startPos];
+                const baseG = basePixels[startPos + 1];
+                const baseB = basePixels[startPos + 2];
+                
+                if (baseR < 200 && baseG < 200 && baseB < 200) return;
+                if (startR === fillRGB.r && startG === fillRGB.g && startB === fillRGB.b) return;
+                
+                const visited = new Set();
+                const stack = [[startX, startY]];
+                
+                while (stack.length > 0) {
+                    const [x, y] = stack.pop();
+                    
+                    if (x < 0 || x >= width || y < 0 || y >= height) continue;
+                    
+                    const key = `${x},${y}`;
+                    if (visited.has(key)) continue;
+                    visited.add(key);
+                    
+                    const pos = (y * width + x) * 4;
+                    
+                    const isLine = basePixels[pos] < 200 && 
+                                   basePixels[pos + 1] < 200 && 
+                                   basePixels[pos + 2] < 200;
+                    
+                    if (isLine) continue;
+                    
+                    const matchesStart = Math.abs(pixels[pos] - startR) <= 10 &&
+                                        Math.abs(pixels[pos + 1] - startG) <= 10 &&
+                                        Math.abs(pixels[pos + 2] - startB) <= 10;
+                    
+                    if (!matchesStart) continue;
+                    
+                    pixels[pos] = fillRGB.r;
+                    pixels[pos + 1] = fillRGB.g;
+                    pixels[pos + 2] = fillRGB.b;
+                    pixels[pos + 3] = 255;
+                    
+                    stack.push([x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]);
+                }
+                
+                ctx.putImageData(drawImageData, 0, 0);
+            };
+
+            const hexToRgb = (hex) => {
+                const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+                return result ? {
+                    r: parseInt(result[1], 16),
+                    g: parseInt(result[2], 16),
+                    b: parseInt(result[3], 16)
+                } : { r: 0, g: 0, b: 0 };
+            };
+
+            const clearDrawing = () => {
+                setShowClearModal(false);
+                saveUndoState();
+                const canvas = drawingCanvasRef.current;
+                const ctx = canvas.getContext('2d');
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                saveWork(); // Save cleared state
+                showNotification('Colors cleared!', 'success');
+            };
+
+            const exportImage = () => {
+                const baseCanvas = canvasRef.current;
+                const drawCanvas = drawingCanvasRef.current;
+                
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = baseCanvas.width;
+                tempCanvas.height = baseCanvas.height;
+                const tempCtx = tempCanvas.getContext('2d');
+                
+                tempCtx.drawImage(baseCanvas, 0, 0);
+                tempCtx.drawImage(drawCanvas, 0, 0);
+                
+                tempCanvas.toBlob((blob) => {
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `gizmo-coloring-${Date.now()}.png`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                    showNotification('Image saved! 💾', 'success');
+                });
+            };
+
+            const isLightColor = (hex) => {
+                const rgb = hexToRgb(hex);
+                const brightness = (rgb.r * 299 + rgb.g * 587 + rgb.b * 114) / 1000;
+                return brightness > 180;
+            };
+
+            const cycleZoom = () => {
+                const currentIndex = zoomLevels.indexOf(zoomLevel);
+                const nextIndex = (currentIndex + 1) % zoomLevels.length;
+                setZoomLevel(zoomLevels[nextIndex]);
+            };
+
+            const ColorButton = ({ color, isActive, onClick }) => (
+                <div
+                    className={`color-btn ${isActive ? 'active' : ''} ${isLightColor(color) ? 'light' : ''}`}
+                    style={{ backgroundColor: color }}
+                    onClick={() => onClick(color)}
+                />
+            );
+
+            // Generation mode
+            if (!imageGenerated) {
+                return (
+                    <div className="generation-mode">
+                        <div className="app-container">
+                            <div className="header">
+                                <img 
+                                    className="gizmo-icon" 
+                                    src="gizmo.png"
+                                    alt="Gizmo the cat"
+                                />
+                                <h1>Gizmo's Coloring Book</h1>
+                                <p className="subtitle">Create magical coloring pages with AI</p>
+                            </div>
+
+                            <div className="section">
+                                <div className="section-title">✨ Generate a Coloring Page</div>
+                                <div className="example-prompts">
+                                    {examplePrompts.map((ex, i) => (
+                                        <button key={i} className="example-btn" onClick={() => setPrompt(ex)}>
+                                            {ex}
+                                        </button>
+                                    ))}
+                                </div>
+                                <div className="input-group">
+                                    <input
+                                        type="text"
+                                        className="input-field"
+                                        placeholder="Describe what you'd like to color..."
+                                        value={prompt}
+                                        onChange={(e) => setPrompt(e.target.value)}
+                                        onKeyPress={(e) => e.key === 'Enter' && generateColoringPage()}
+                                    />
+                                    <button
+                                        className="btn btn-primary"
+                                        onClick={generateColoringPage}
+                                        disabled={loading}
+                                    >
+                                        {loading ? 'Generating...' : '🎨 Generate'}
+                                    </button>
+                                </div>
+                                <p style={{color: '#9ca3af', fontSize: '0.9em', marginTop: '10px'}}>
+                                    💡 Tip: Be specific! "a fluffy Persian cat with flowers and butterflies"
+                                </p>
+                            </div>
+
+                            {loading && (
+                                <div className="loading">
+                                    <div className="spinner"></div>
+                                    Creating your coloring page... 10-15 seconds! ✨
+                                </div>
+                            )}
+
+                            {notification.visible && (
+                                <div className={`notification ${notification.type}`}>
+                                    {notification.message}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Resume saved work modal */}
+                        {showResumeModal && (
+                            <div className="modal-overlay">
+                                <div className="modal">
+                                    <h3>🎨 Welcome Back!</h3>
+                                    <p>You have unfinished coloring work. Would you like to continue where you left off?</p>
+                                    <div className="modal-buttons">
+                                        <button className="btn btn-secondary" onClick={clearSavedWork}>
+                                            Start Fresh
+                                        </button>
+                                        <button className="btn btn-primary" onClick={loadSavedWork}>
+                                            Continue
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                );
+            }
+
+            // Coloring mode - full screen with fixed bottom panel
+            return (
+                <div className="coloring-mode">
+                    {notification.visible && (
+                        <div className={`notification ${notification.type}`}>
+                            {notification.message}
+                        </div>
+                    )}
+
+                    {/* Top header bar */}
+                    <div className="coloring-header">
+                        <h2><img src="gizmo.png" alt="Gizmo" style={{ width: '32px', height: '32px', borderRadius: '50%', marginRight: '8px', verticalAlign: 'middle' }} /> Gizmo's Coloring Book</h2>
+                        <button 
+                            className="btn btn-secondary"
+                            onClick={() => setShowNewImageModal(true)}
+                        >
+                            ← New Image
+                        </button>
+                    </div>
+
+                    {/* Canvas area - scrollable */}
+                    <div ref={canvasAreaRef} className={`canvas-area ${zoomLevel > 1 ? 'zoomed' : ''}`}>
+                        <div 
+                            className="canvas-wrapper" 
+                            style={{ 
+                                width: canvasSize.width * zoomLevel,
+                                height: canvasSize.height * zoomLevel
+                            }}
+                        >
+                            <canvas
+                                ref={canvasRef}
+                                width={canvasSize.width}
+                                height={canvasSize.height}
+                                style={{ 
+                                    position: 'absolute', 
+                                    zIndex: 1,
+                                    width: canvasSize.width * zoomLevel,
+                                    height: canvasSize.height * zoomLevel
+                                }}
+                            />
+                            <canvas
+                                ref={drawingCanvasRef}
+                                width={canvasSize.width}
+                                height={canvasSize.height}
+                                style={{ 
+                                    position: 'relative', 
+                                    zIndex: 2,
+                                    cursor: toolMode === 'eyedropper' ? 'crosshair' : 'pointer',
+                                    width: canvasSize.width * zoomLevel,
+                                    height: canvasSize.height * zoomLevel
+                                }}
+                                onMouseDown={handleCanvasClick}
+                                onTouchStart={handleTouchStart}
+                                onTouchMove={handleTouchMove}
+                                onTouchEnd={handleTouchEnd}
+                            />
+                        </div>
+                    </div>
+
+                    {/* Fixed bottom panel */}
+                    <div className="bottom-panel">
+                        {/* Color row - horizontal scroll */}
+                        <div className="color-row-container">
+                            <div className="color-row-scroll">
+                                {recentColors.length > 0 && (
+                                    <>
+                                        <span className="recent-label">Recent</span>
+                                        <div className="color-section">
+                                            {recentColors.map((color, i) => (
+                                                <ColorButton
+                                                    key={`recent-${i}`}
+                                                    color={color}
+                                                    isActive={currentColor === color}
+                                                    onClick={setCurrentColor}
+                                                />
+                                            ))}
+                                        </div>
+                                        <div className="color-divider" />
+                                    </>
+                                )}
+                                
+                                <div className="color-section">
+                                    {COLOR_GROUPS.skin.map((color, i) => (
+                                        <ColorButton key={`skin-${i}`} color={color} isActive={currentColor === color} onClick={setCurrentColor} />
+                                    ))}
+                                </div>
+                                <div className="color-divider" />
+                                
+                                <div className="color-section">
+                                    {COLOR_GROUPS.warm.map((color, i) => (
+                                        <ColorButton key={`warm-${i}`} color={color} isActive={currentColor === color} onClick={setCurrentColor} />
+                                    ))}
+                                </div>
+                                <div className="color-divider" />
+                                
+                                <div className="color-section">
+                                    {COLOR_GROUPS.cool.map((color, i) => (
+                                        <ColorButton key={`cool-${i}`} color={color} isActive={currentColor === color} onClick={setCurrentColor} />
+                                    ))}
+                                </div>
+                                <div className="color-divider" />
+                                
+                                <div className="color-section">
+                                    {COLOR_GROUPS.purple.map((color, i) => (
+                                        <ColorButton key={`purple-${i}`} color={color} isActive={currentColor === color} onClick={setCurrentColor} />
+                                    ))}
+                                </div>
+                                <div className="color-divider" />
+                                
+                                <div className="color-section">
+                                    {COLOR_GROUPS.neutral.map((color, i) => (
+                                        <ColorButton key={`neutral-${i}`} color={color} isActive={currentColor === color} onClick={setCurrentColor} />
+                                    ))}
+                                    <div className="color-picker-btn">
+                                        <span>+</span>
+                                        <input
+                                            type="color"
+                                            className="color-picker-input"
+                                            value={currentColor}
+                                            onChange={(e) => {
+                                                setCurrentColor(e.target.value);
+                                                addToRecentColors(e.target.value);
+                                            }}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Toolbar row */}
+                        <div className="toolbar-row">
+                            <div className="toolbar-group">
+                                <div className="current-color-display">
+                                    <div className="current-color-swatch" style={{ backgroundColor: currentColor }} />
+                                </div>
+                            </div>
+
+                            <div className="toolbar-group">
+                                <button 
+                                    className={`btn btn-icon ${toolMode === 'fill' ? 'btn-active' : ''}`}
+                                    onClick={() => setToolMode('fill')}
+                                    title="Fill"
+                                >
+                                    🪣
+                                </button>
+                                <button 
+                                    className={`btn btn-icon ${toolMode === 'eyedropper' ? 'btn-active' : ''}`}
+                                    onClick={() => setToolMode('eyedropper')}
+                                    title="Pick color"
+                                >
+                                    💧
+                                </button>
+                            </div>
+
+                            <div className="toolbar-group">
+                                <button 
+                                    className="btn btn-icon"
+                                    onClick={undo}
+                                    disabled={undoStack.length === 0}
+                                    title="Undo"
+                                >
+                                    ↩️
+                                </button>
+                                <button 
+                                    className="btn btn-icon"
+                                    onClick={redo}
+                                    disabled={redoStack.length === 0}
+                                    title="Redo"
+                                >
+                                    ↪️
+                                </button>
+                            </div>
+
+                            <div className="toolbar-group">
+                                <button 
+                                    className={`btn btn-icon ${zoomLevel > 1 ? 'btn-active' : ''}`}
+                                    onClick={cycleZoom}
+                                    title={`Zoom: ${zoomLevel}x`}
+                                    style={{ fontSize: '0.9em', minWidth: '48px' }}
+                                >
+                                    {zoomLevel}x
+                                </button>
+                                <button 
+                                    className="btn btn-icon"
+                                    onClick={() => setShowClearModal(true)}
+                                    title="Clear"
+                                >
+                                    🗑️
+                                </button>
+                                <button 
+                                    className="btn btn-icon btn-primary"
+                                    onClick={exportImage}
+                                    title="Save"
+                                >
+                                    💾
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Clear confirmation modal */}
+                    {showClearModal && (
+                        <div className="modal-overlay" onClick={() => setShowClearModal(false)}>
+                            <div className="modal" onClick={(e) => e.stopPropagation()}>
+                                <h3>Clear All Colors?</h3>
+                                <p>This will erase all your coloring. You can undo this.</p>
+                                <div className="modal-buttons">
+                                    <button className="btn btn-secondary" onClick={() => setShowClearModal(false)}>
+                                        Cancel
+                                    </button>
+                                    <button className="btn btn-primary" onClick={clearDrawing}>
+                                        Yes, Clear
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* New image confirmation modal */}
+                    {showNewImageModal && (
+                        <div className="modal-overlay" onClick={() => setShowNewImageModal(false)}>
+                            <div className="modal" onClick={(e) => e.stopPropagation()}>
+                                <h3>Start New Image?</h3>
+                                <p>Your current work will be saved. You can come back to it later.</p>
+                                <div className="modal-buttons">
+                                    <button className="btn btn-secondary" onClick={() => setShowNewImageModal(false)}>
+                                        Cancel
+                                    </button>
+                                    <button className="btn btn-primary" onClick={() => {
+                                        setShowNewImageModal(false);
+                                        setImageGenerated(false);
+                                    }}>
+                                        Create New
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        ReactDOM.render(<ColoringBookApp />, document.getElementById('root'));
+    </script>
+</body>
+</html>

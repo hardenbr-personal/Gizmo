@@ -35,7 +35,7 @@ Netlify Function proxies requests to Gemini API, keeping the API key secure and 
 
 ## Live Demo
 
-[gizmocoloringbook.netlify.app](https://gizmocoloringbook.netlify.app)
+[gizmocoloringbook.netlify.app](https://gizmos-coloring-book.netlify.app/)
 
 ## Local Development
 
